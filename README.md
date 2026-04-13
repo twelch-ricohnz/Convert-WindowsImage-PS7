@@ -1,23 +1,20 @@
-# REQUIRED: PowerShell 7.x (Core)
-This script requires PowerShell Core 7.0 or later and will not run on Windows PowerShell 5.1
-
-
 # Convert-WindowsImage
 Creates a Windows VM for Hyper-V from a Windows-ISO
 
-# Release 21H2
-Currently **supported and tested**:
-- Windows 7, 8, 8.1
-- Windows 10 / all versions up to 21H2
-- **new** Windows 11 / all versions up to 21H2 in UEFI **and** BIOS
-- **experimental** ARM64 support / all versions up to 21H2 in UEFI
-  - I don't have the hardware to test this on ARM64 &#128576;
+Forked and updated from https://github.com/x0nn/Convert-WindowsImage to support PowerShell Core 7.6 and later
+
+# Release 25H2
+Currently **tested**:
+- Windows 11 / all versions 25H2 in UEFI
 
 BIOS-DiskLayout
-- Windows Server 2016 / 2019 / **new** 2022
-- It should work for all versions from Windows 7 up to 11. Please file a bug report, if a version does not work.
+- It should work for all versions from Windows 7 up to 11. 
 
 VM's run on Hyper-V (DiskLayout: BIOS uses Gen1-VM, UEFI uses Gen2-VM)
+
+# REQUIRED: PowerShell 7.x (Core)
+This script requires PowerShell Core 7.0 or later
+It requires running as Adminstrator
 
 ## Examples
 
@@ -25,9 +22,9 @@ VM's run on Hyper-V (DiskLayout: BIOS uses Gen1-VM, UEFI uses Gen2-VM)
    
 `. .\Convert-WindowsImage.ps1`
 
-2. Create a Windows Server 2019 VM
+2. Create a Windows 11 Pro VM
 
-`Convert-WindowsImage -SourcePath "C:\Temp\windowsServer2019.iso" -VHDFormat "VHDX" -Edition "Windows Server 2019 Standard" -SizeBytes 50GB -DiskLayout "UEFI" -VHDPath "C:\Temp\windowsServer2019.vhdx"`
+`Convert-WindowsImage -SourcePath "C:\ISO\en-us_windows_11_consumer_editions_version_25h2_updated_march_2026_x64_dvd_a1cf6c36.iso" -VHDFormat "VHDX" -Edition 6 -SizeBytes 50GB -DiskLayout "UEFI" -VHDPath "C:\VHD\Template\Win11_25H2.vhdx"`
 					
 If you don't know the Edition, use -Edition "LIST" and the function will fail, but *list all editions in the ISO/WIM-file*.
 
