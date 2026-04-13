@@ -1,7 +1,9 @@
-function
-Convert-WindowsImage
-{
+function Convert-WindowsImage {
     <#
+
+    IMPORTANT: REQUIRES PowerShell 7.x (Core)
+    READ THE README.MD
+
     .NOTES
         Version:        21H2-20211020
 
@@ -213,7 +215,8 @@ Convert-WindowsImage
     .OUTPUTS
         System.IO.FileInfo
     #>
-    #Requires -Version 3.0
+    #Requires -Version 7.0
+    #Requires -RunAsAdministrator
     [CmdletBinding(DefaultParameterSetName="SRC",
         HelpURI="https://github.com/x0nn/Convert-WindowsImage#readme")]
 
@@ -797,7 +800,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
         function
         Get-WindowsBuildNumber
         {
-            $os = Get-WmiObject -Class Win32_OperatingSystem
+            $os = Get-CimInstance -ClassName Win32_OperatingSystem
             return [int]($os.BuildNumber)
         }
 
@@ -934,9 +937,22 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             catch
             {
                 # WinPE DISM does not support online queries.  This will throw on non-WinPE machines
-                $winpeVersion = (Get-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinPE').Version
-
-                Write-LogMessage "Running WinPE version $winpeVersion" -logType Verbose
+                try
+                {
+                    if (Test-Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinPE')
+                    {
+                        $winpeVersion = (Get-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\WinPE').Version
+                        Write-LogMessage "Running WinPE version $winpeVersion" -logType Verbose
+                    }
+                    else
+                    {
+                        Write-LogMessage "Get-WindowsOptionalFeature failed but not running in WinPE" -logType Debug
+                    }
+                }
+                catch
+                {
+                    Write-LogMessage "Could not determine if running in WinPE: $_" -logType Debug
+                }
 
                 $hyperVEnabled = $false
             }
@@ -1832,7 +1848,13 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
 
                 $EditionIndex = 0;
 
-                if ([Int32]::TryParse($Edition, [ref]$EditionIndex) -and $WindowsImages.Count -ge $EditionIndex)
+                # Special handling for LIST edition - list all available images
+                if ($Edition -ilike "LIST")
+                {
+                    List-WindowsImages $WindowsImages
+                    throw "Please use -Edition with one of the image names or index numbers listed above."
+                }
+                elseif ([Int32]::TryParse($Edition, [ref]$EditionIndex) -and $WindowsImages.Count -ge $EditionIndex)
                 {
                     $EditionIndex --
                     $WindowsImage = $WindowsImages[$EditionIndex]
@@ -2454,8 +2476,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
 
 }
 
-function List-WindowsImages
-{
+function List-WindowsImages {
 	[cmdletBinding()]
 	param (
         [Parameter(Position=0,Mandatory=$True, ValueFromPipeline)][Microsoft.Dism.Commands.BasicImageInfoObject[]]$windowsImages
@@ -2466,8 +2487,7 @@ function List-WindowsImages
 }
 
 
-function Write-LogMessage
-{
+function Write-LogMessage {
 	[cmdletBinding()]
 	param (
         [Parameter(Position=0,Mandatory=$True, ValueFromPipeline)][String]$message,
@@ -2485,9 +2505,7 @@ function Write-LogMessage
 	}
 }
 
-function
-Add-WindowsImageTypes
-{
+function Add-WindowsImageTypes {
         $code      = @"
         using System;
         using System.Collections.Generic;
@@ -4130,5 +4148,9 @@ Add-WindowsImageTypes
         }
 "@
 
-    Add-Type -TypeDefinition $code -ReferencedAssemblies "System.Xml","System.Linq","System.Xml.Linq" -ErrorAction SilentlyContinue
+    try {
+        Add-Type -TypeDefinition $code -Language CSharp -ErrorAction Stop
+    } catch {
+        Write-Warning "Failed to load WIM2VHD types: $($_.Exception.Message). Script will continue but some functionality may be limited."
+    }
 }

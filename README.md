@@ -1,3 +1,7 @@
+# REQUIRED: PowerShell 7.x (Core)
+This script requires PowerShell Core 7.0 or later and will not run on Windows PowerShell 5.1
+
+
 # Convert-WindowsImage
 Creates a Windows VM for Hyper-V from a Windows-ISO
 
@@ -47,12 +51,12 @@ You've guessed it, PR's are welcome.
 
 ## Requirements
 
-The script needs
-- **exact** Powershell 5.1 on a 
-- Windows Host (lowest is Windows 8, but Windows 10 is recommended) with 
-- **administrator rights**
-	
-Powershell ISE is currently supported, but will be deprecated in further releases, according microsofts policy. Consider using Visual Studio Code.
+The script requires:
+- **PowerShell 7.4 or later** (PowerShell Core)
+- Windows Host (lowest is Windows 8, but Windows 10 or later is recommended) with
+- **Administrator rights**
+
+Note: This is a Windows-only script and cannot run on Linux or macOS.
 
 ## License
 
